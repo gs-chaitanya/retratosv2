@@ -30,7 +30,7 @@ def filter_tags(word, config_file):
     return (('').join(buffer))
 
 def raw_tagger(sentence, apertium_dir, tag_mode):
-    escaped_sentence = remove_punctuation(sentence.replace("'", r"\'").replace('"',r'\"').replace('!','\!'))
+    escaped_sentence = remove_punctuation(sentence.replace("'", r"\'").replace('"',r'\"').replace('!',r"\!"))
         # command = f'echo "{escaped_sentence}" | apertium -d {apertium_dir} {tag_mode}'
         # process = Popen(command, stdout=PIPE, stderr=PIPE)
         # raw_tagged_output, error = process.communicate()
