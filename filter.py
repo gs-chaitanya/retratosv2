@@ -7,8 +7,23 @@ from tqdm import tqdm
 
 def filter_priors(workdir, priors_file="latest.priors", min_freq = 1, include_unknowns=False, keep_top=3, filename="filtered_p.priors"):
     os.chdir(workdir)
+    lex_additions = {}
     with open(priors_file) as f:
-        lex_additions = dict((tuple(line.strip()[4:-2].split('\t'))[0:2], int(re.search(r'\d+$', line).group())) for line in f if line.startswith('LEX'))
+        # lex_additions = dict((tuple(line.strip()[4:-2].split('\t'))[0:2], int(re.search(r'\d+$', line).group())) for line in f if line.startswith('LEX'))
+        for line in f:
+            if line.startswith('LEX'):
+                # an entry in the priors file generally looks like this - LEX	merit<n>	mérito<n>	5
+                # the number at the end of each entry represents frequency and is an import metric for consideration for patching into the bidix
+                # we shall create a dictionary that stores all the entries in the priors witht the key as the lexical pair and the value as the frequency
+
+                aligned_lex = tuple(line.strip()[4:-2].split('\t'))[0:2]
+                # we extract only the alignment pairs and leave out the frequency at the end
+
+                alignment_frequency = int(re.search(r'\d+$', line).group())
+                # the above line looks for the frequency at the end of each entry in the priors file
+
+                lex_additions[aligned_lex] = alignment_frequency
+
         f.close()
     
     print("sorting dictionary by frequency now \n")
@@ -25,5 +40,5 @@ def filter_priors(workdir, priors_file="latest.priors", min_freq = 1, include_un
     print(f"saved top {keep_top} entries to {filename}")
 
 # example usage
-filter_priors("./", "latest.priors", 2, False, 10)
+filter_priors("./", "latest.priors", 2, False, 10, "test.pr")
 
