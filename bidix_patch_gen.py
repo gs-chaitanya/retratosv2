@@ -4,14 +4,6 @@ import re
 #the bidix patch gen build patches from filtered priors
 #the frequency from filtered priors is removed and that file is fed to this script
 
-es = "<e>" # entry start
-ec = "</e>" # entry close
-
-ls = "<l>" # left start
-lc = "</l>" # left close
-
-rs = "<l>" # right start
-rc = "</l>" # right close
 
 # consider an entry in the filtered priors without the frequency
 # it should look something like this 
@@ -33,10 +25,6 @@ def pad_word(word):
     for tag in tags_here:
         final_pad.append(f"<s n=\"{tag}\">")
     return ''.join(final_pad)
-
-    
-    
-print(pad_word("hey<n><m><sg>"))
 
 
 # creating a function to make it importable

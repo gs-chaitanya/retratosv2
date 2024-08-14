@@ -3,14 +3,15 @@ import os
 from align import align_file
 from generate_priors import genpriors
 from filter import filter_priors
+from bidix_patch_gen import gen_bidix_patch
 
 parser = argparse.ArgumentParser()
 
     #parser arguments
 parser.add_argument('--mode', help='set working mode - choose out of align or filter', \
-                    required=True, choices = ["align", "filter", "generate_priors"])
+                    required=True, choices = ["align", "filter", "generate_priors", "suggest"])
 
-parser.add_argument('--workdir', help='specify the working directory')
+parser.add_argument('--workdir',required=True, help='specify the working directory')
 
 parser.add_argument('--tag-config', help='specify a config file that \
                     details which tags are to be included in the priors') #required=True - needed
@@ -84,4 +85,10 @@ if(args['mode'] == 'align'):
     if (args['corpus'] == None):
         raise RetratosError("Corpus not provided")
     align_file(workdir, args['file'], args['priors'], args['output'])
+
+# suggest mode is used to create bidix patches from filtered priors - uses arguents : file and workdir 
+if(args['mode'] == 'suggest'):
+    if (args['file'] == None):
+        raise RetratosError("FIltered priors not provided")
+    gen_bidix_patch(args['file'], args['workdir'])
     

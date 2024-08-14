@@ -40,5 +40,5 @@ def filter_priors(workdir, priors_file="latest.priors", min_freq = 1, include_un
     print(f"saved top {keep_top} entries to {filename}")
 
 # example usage
-filter_priors("./", "latest.priors", 2, False, 10, "test.pr")
+# filter_priors("./", "latest.priors", 2, False, 10, "test.pr")
 
