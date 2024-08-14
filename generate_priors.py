@@ -22,6 +22,8 @@ def genpriors(workdir, left_corpus, right_corpus, apertium_lang_directory, left_
         right_text = r.readlines()
         l.close()
         r.close()
+
+    # the following code was commented to prevent automatic deletion of temp files that the user should be able to inspect between subsequent runs
     
     # if os.path.isfile("latest.priors"):
     #     print("Priors file already generated. Do you want to overwrite ?")

@@ -15,11 +15,18 @@ def remove_punctuation(sentence):
 def filter_tags(word, config_file):
     with open('config.json', 'r') as f:
         config = json.load(f)
-    pattern = r'(\*?\w+)(<[^>]+>)+'
-    match = re.match(pattern, word)
+    # pattern = r'(\*?\w+)(<[^>]+>)+'
+    # match = re.match(pattern, word)
+
+    # extract the base word from the tagged form
     base_word = word.split('<')[0]
+    # here we are matching a regex expression to extract all the tags from a tagged form and storing it in a list called tags
     tags = re.findall(r'<([^>]+)>', word)
+    # the buffer list stores the base word and the first tag which usually contains the POS
     buffer = [base_word, f"<{tags[0]}>"]
+
+    # now, we look in the config file for additional tags to be included. this depends on the POS. if further tags are supplied in the config file
+    # to be included with the main POS, for example gender with noun, we specify this in the config file and then add them here to the buffer 
     try:
         confs = config[tags[0]]
         for tag in tags[1:]:
@@ -27,6 +34,7 @@ def filter_tags(word, config_file):
                 buffer.append(f"<{tag}>")
     except:
         pass
+    # return the final buffer with any addition tags specified in the config
     return (('').join(buffer))
 
 def raw_tagger(sentence, apertium_dir, tag_mode):
@@ -39,5 +47,6 @@ def raw_tagger(sentence, apertium_dir, tag_mode):
     tagged_tokens = [filter_tags(x, config_file) for x in tagged_tokens if x != '.<sent>']
     return str((' ').join(tagged_tokens))
 
-raw_tagged_sentence = raw_tagger("Everybody wants sunshine nobody wants rain", "/home/chirag/apertium-eng-spa", "eng-spa-tagger")
-print(raw_tagged_sentence)
+# just for testing
+# raw_tagged_sentence = raw_tagger("Everybody wants sunshine nobody wants rain", "/home/chirag/apertium-eng-spa", "eng-spa-tagger")
+# print(raw_tagged_sentence)
