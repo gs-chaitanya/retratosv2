@@ -1,3 +1,5 @@
 test.pr
 __pycache__/
 bidix.txt
+*.patches
+*.priors

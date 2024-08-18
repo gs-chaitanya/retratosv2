@@ -5,7 +5,13 @@ from generate_priors import genpriors
 from filter import filter_priors
 from bidix_patch_gen import gen_bidix_patch
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(prog="retratosv2",
+                                description="""Retratos can produce bidix patches from parallel corpora. It has three working modes 
+                                                - generate_priors : create priors from a large corpus
+                                                - filter : filter the best priors to be considered for bidix patching
+                                                - suggest : generate bidix patches using filtered priors
+                                                - align : align a smaller corpus using previously generated priors""",
+                                epilog="Thanks for using retratos :)")
 
     #parser arguments
 parser.add_argument('--mode', help='set working mode - choose out of align or filter', \
@@ -86,9 +92,13 @@ if(args['mode'] == 'align'):
         raise RetratosError("Corpus not provided")
     align_file(workdir, args['file'], args['priors'], args['output'])
 
-# suggest mode is used to create bidix patches from filtered priors - uses arguents : file and workdir 
+# suggest mode is used to create bidix patches from filtered priors - uses arguents : file, workdir, output
 if(args['mode'] == 'suggest'):
     if (args['file'] == None):
-        raise RetratosError("FIltered priors not provided")
-    gen_bidix_patch(args['file'], args['workdir'])
-    
+        print("Priors file not specified so proceeding with the workspace defaults")
+        if (os.path.exists(f"{args['workdir']}/filtered.priors")):
+            gen_bidix_patch(f"{args['workdir']}/filtered.priors", args['workdir'])
+        else:
+            print("you have not provided a path to filtered priors and the default file does not exist. \nFirst generate the filtered priors or provide the correct pathname.")
+    else:
+        gen_bidix_patch(args['file'], args['workdir'])

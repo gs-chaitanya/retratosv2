@@ -12,11 +12,13 @@ class RetratosError(Exception):
 
 def genpriors(workdir, left_corpus, right_corpus, apertium_lang_directory, left_lang, right_lang, output_filename="latest.priors"):
     os.chdir(workdir)
-    temp_file_dir = "temp_files"
 
-        # opening the files
-    if os.path.isdir(temp_file_dir):
-        shutil.rmtree(f'./{temp_file_dir}')
+    # the commented code below deleted the temp file directory which prevented re running of retratos in the same directory - you need to delete it manually now
+    # temp_file_dir = "temp_files"
+    # if os.path.isdir(temp_file_dir):
+    #     shutil.rmtree(f'./{temp_file_dir}')
+
+    # opening the files
     with open(left_corpus, 'r') as l, open(right_corpus, 'r') as r:
         left_text = l.readlines()
         right_text = r.readlines()

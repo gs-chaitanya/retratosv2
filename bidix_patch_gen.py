@@ -29,18 +29,19 @@ def pad_word(word):
 
 # creating a function to make it importable
 
-def gen_bidix_patch(file, workdir):
+def gen_bidix_patch(file, workdir, output_filename="bidix.patches"):
     os.chdir(workdir)
     patches = []
     with open(f'./{file}', 'r') as f:
         for line in f:
-            l = "<l>" + line.split(' ')[0] + "</l>"
-            r = "<r>" + line.split(' ')[1] + "</r>"
+            print()
+            l = "<l>" + pad_word(line.split(' ')[0]) + "</l>"
+            r = "<r>" + pad_word(line.split(' ')[1]) + "</r>"
             entry = "<e>" + "\t" + "<p>" + l + r + "</p>" + "</e>" + "\n"
             patches.append(entry)
         f.close()
 
-    with open('./bidix.txt', 'w') as g:
+    with open(f"./{output_filename}", 'w') as g:
         for entry in patches:
             g.write(entry)
         g.close()
@@ -49,6 +50,5 @@ def gen_bidix_patch(file, workdir):
 
 # test
 # gen_bidix_patch("filtered_p.priors", "./")
-
         
 

@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 # filter by matching first tag - that is left
 
-def filter_priors(workdir, priors_file="latest.priors", min_freq = 1, include_unknowns=False, keep_top=3, filename="filtered_p.priors"):
+def filter_priors(workdir, priors_file="latest.priors", min_freq = 1, include_unknowns=False, keep_top=3, output_filename="filtered.priors"):
     os.chdir(workdir)
     lex_additions = {}
     with open(priors_file) as f:
@@ -32,13 +32,13 @@ def filter_priors(workdir, priors_file="latest.priors", min_freq = 1, include_un
                                 if int(v) >= int(min_freq) and (not(k[0][0] == "*") or include_unknowns)), key=lambda item: item[1], reverse=True))
     print("sorted \n")
     print("filtering priors now \n")
-    with open(f'{workdir}/{filename}', 'w') as g:
+    with open(f'{workdir}/{output_filename}', 'w') as g:
         for line in tqdm(list(itertools.islice(([k[0], k[1], v] for k,v in sorted_by_freq.items()), int(keep_top)))):
             g.write(f"{line[0]} {line[1]} {line[2]} \n") #should I keep frequency in final output ?
         g.close()
 
-    print(f"saved top {keep_top} entries to {filename}")
+    print(f"saved top {keep_top} entries to {output_filename}")
 
 # example usage
-# filter_priors("./", "latest.priors", 2, False, 10, "test.pr")
+# filter_priors("./", "latest.priors", 2, False, 10, "filtered.priors")
 
