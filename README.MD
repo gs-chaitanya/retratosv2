@@ -43,7 +43,12 @@ Next, install the requirements using
 
 ## Workflow
 ReTraTos was created to develop bidix patches from parallel corpora. It has different modes so that the output can be inspected at each step of the patch creation process.
-To create bidix patches from parallel corpora
+To create bidix patches from parallel corpora, the following steps can be followed
+<ol>
+<li> Create priors from the parallel corpora using the generate priors mode
+<li> Filter the generated priors using the filter mode
+<li> Generate bidix patches using the suggest mode
+</ol>
 
 
 ## Generating Priors
@@ -73,6 +78,17 @@ Generate bidix patches in the apertium bidix format from the filtered priors. If
 
 - use   ````--mode suggest````
 
+<br>
+<i>
+optional parameters: 
+<ul>
+<li> --output(to specify custom output filename), 
+<li> --file (to specify a custom filtered priors file)
+</ul>
+</i><br>
+
+the mode will fail if a custom file is not provided using the ````--file```` parameter and the default filtered priors file called ````filtered.priors```` does not exist.
+
 example usage <br>
 ````
 python retratos.py --mode suggest --workdir "./" --output bidix_new.patches
@@ -93,3 +109,7 @@ the align mode can be used to align a smaller corpus using previously generated 
 - config is saved to config.json
 - can be directly edited or use config_creatory.py
 - currently only keeping the first tag unless the config specifies which other tags to include
+
+
+### Need Help ? 
+for any further questions, you may reach out to the author at gschaitanya2003[at]gmail[dot]com or raise an issue in the repository
