@@ -3,3 +3,4 @@ __pycache__/
 bidix.txt
 *.patches
 *.priors
+test.py

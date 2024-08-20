@@ -13,8 +13,12 @@ class RetratosError(Exception):
 def genpriors(workdir, left_corpus, right_corpus, apertium_lang_directory, left_lang, right_lang, output_filename="latest.priors"):
     os.chdir(workdir)
 
+    # we generate a temp file directory for eflomal to store forward and backward links for generating priors
+    if not os.path.exists("./temp_files"):
+        os.mkdir("temp_files")
+    temp_file_dir = "temp_files"
+
     # the commented code below deleted the temp file directory which prevented re running of retratos in the same directory - you need to delete it manually now
-    # temp_file_dir = "temp_files"
     # if os.path.isdir(temp_file_dir):
     #     shutil.rmtree(f'./{temp_file_dir}')
 

@@ -4,6 +4,9 @@ from align import align_file
 from generate_priors import genpriors
 from filter import filter_priors
 from bidix_patch_gen import gen_bidix_patch
+from utils import does_binary_exist
+import pkg_resources
+from pkg_resources import DistributionNotFound, VersionConflict
 
 parser = argparse.ArgumentParser(prog="retratosv2",
                                 description="""Retratos can produce bidix patches from parallel corpora. It has three working modes 
@@ -44,11 +47,26 @@ args = vars(parser.parse_args())
 class RetratosError(Exception):
     pass
 
-workdir = ''
-if args['workdir'] == None:
-    workdir = os.getcwd()
-else:
-    workdir = args['workdir']
+# before we do anything else, we should first check if the required dependencies - elfomal and tqdm are installed
+# we check for eflomal below
+if not does_binary_exist("eflomal"):
+    print("eflomal is required to run this tool, follow the readme for install instrunctions")
+    raise RetratosError
+
+# now we check for module dependencies - (do we really need this ?)
+with open("requirements.txt", "r") as reqs:
+    dependencies = reqs.read().splitlines()
+    reqs.close()
+pkg_resources.require(dependencies)
+
+
+workdir = args['workdir']
+
+if not os.path.exists(workdir):
+    print("specified workdir path does not exist, create the workdir, place the corpus in it and rerun the tool with the correct arguments for corpus paths")
+    raise RetratosError
+
+os.chdir(workdir)
 
 if(args['mode'] == 'generate_priors'):
     required_args = ['left', 'right', 'lang_dir']
@@ -95,11 +113,11 @@ if(args['mode'] == 'align'):
 # suggest mode is used to create bidix patches from filtered priors - uses arguents : file, workdir, output
 if(args['mode'] == 'suggest'):
     if (args['file'] == None):
-        print("Priors file not specified so proceeding with the workspace defaults \n")
-        if (os.path.exists(f"{args['workdir']}/filtered.priors")):
-            gen_bidix_patch(f"{args['workdir']}/filtered.priors", args['workdir'])
+        print("Priors file not specified so proceeding with the workspace default file - filtered.priors \n")
+        if (os.path.exists(f"{workdir}/filtered.priors")):
+            gen_bidix_patch(f"{workdir}/filtered.priors", workdir)
         else:
             print("Bidix patch generation failed")
             print("You have not provided a path to filtered priors and the default file does not exist. \nFirst generate the filtered priors or provide the correct pathname.")
     else:
-        gen_bidix_patch(args['file'], args['workdir'])
+        gen_bidix_patch(args['file'], workdir)

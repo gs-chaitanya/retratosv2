@@ -6,6 +6,11 @@ import string
 from subprocess import Popen, PIPE
 import json
 
+def does_binary_exist(name):
+    """Check whether `name` is on PATH."""
+    from distutils.spawn import find_executable
+    return find_executable(name) is not None
+
 def remove_punctuation(sentence):
     return sentence.translate(str.maketrans('', '', string.punctuation))
 
