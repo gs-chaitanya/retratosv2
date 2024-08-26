@@ -12,13 +12,12 @@ parser = argparse.ArgumentParser(prog="retratosv2",
                                 description="""Retratos can produce bidix patches from parallel corpora. It has three working modes 
                                                 - generate_priors : create priors from a large corpus
                                                 - filter : filter the best priors to be considered for bidix patching
-                                                - suggest : generate bidix patches using filtered priors
-                                                - align : align a smaller corpus using previously generated priors""",
+                                                - suggest : generate bidix patches using filtered priors""",
                                 epilog="Thanks for using retratos :)")
 
     #parser arguments
 parser.add_argument('--mode', help='set working mode - choose out of generate_priors, suggest, filter', \
-                    required=True, choices = ["align", "filter", "generate_priors", "suggest"])
+                    required=True, choices = ["filter", "generate_priors", "suggest"])
 
 parser.add_argument('--workdir',required=True, help='specify the working directory. all your working files are saved here and default files are automatically picked up from the workdir')
 
@@ -42,8 +41,8 @@ parser.add_argument("--left_lang", help='specify the source(left) language')
 parser.add_argument("--right_lang", help='specify the target(right) language')
 parser.add_argument("--output", help='specify an output filename instead of the default in any of the modes')
 
-args = vars(parser.parse_args())
-
+args = parser.parse_args()
+ 
 class RetratosError(Exception):
     pass
 
@@ -104,11 +103,6 @@ if(args['mode'] == 'filter'):
         priors_file = args['priors']
     filter_priors(workdir, priors_file, args['min_freq'], args['include_unknowns'], args['keep_top'], args['output'])
 
-
-if(args['mode'] == 'align'):
-    if (args['corpus'] == None):
-        raise RetratosError("Corpus not provided")
-    align_file(workdir, args['file'], args['priors'], args['output'])
 
 # suggest mode is used to create bidix patches from filtered priors - uses arguents : file, workdir, output
 if(args['mode'] == 'suggest'):

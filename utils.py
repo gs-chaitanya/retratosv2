@@ -5,6 +5,10 @@ import re
 import string
 from subprocess import Popen, PIPE
 import json
+import os
+
+class RetratosError(Exception):
+    pass
 
 def does_binary_exist(name):
     """Check whether `name` is on PATH."""
@@ -59,6 +63,47 @@ def tagger(sentence, apertium_dir, tag_mode, tag_config_file="config.json"):
     tagged_tokens = [filter_tags(x) for x in tagged_tokens if x != '.<sent>']
     return str((' ').join(tagged_tokens))
 
+def tag_nullflush(paragraph, config):
+    escaped_paragraph = remove_punctuation(paragraph.replace("'", r"\'").replace('"',r'\"').replace('!','\!'))
+    escaped_paragraph = escaped_paragraph.replace("\n", "\n\0")
+
+
+def direct(path_to_corpus, path_to_config, source_lang, target_lang, apertium_dir):
+    """
+    corpus is piped directly to the tagger in the shell 
+
+    args:
+    path_to_corpus - absolute path of the corpus to be tagged
+    path_to_config - absolute path of the json config file 
+    source-lang - apertium abbreviation of the source language
+    target-lang - apertium abbreviation of the target language
+    apertium dir - absolute path of the apertium language directory
+    """
+    path_to_corpus = os.path.abspath(path_to_corpus)
+    path_to_config = os.path.abspath(path_to_config)
+
+    # we shall try to check if the config file provided specifies a tagger
+    with open(path_to_config) as f:
+        cfg = json.load(f)
+        f.close()
+
+    if cfg["tagger"] == "":
+        tagger = f"apertium -d {apertium_dir} {source_lang}-{target_lang}-tagger"
+    else:
+        tagger = cfg["tagger"]
+
+    command = f"cat {path_to_corpus} | {tagger}"
+
+    print(command)
+    try:
+        result = subprocess.run(command, shell=True, check=True, text=True, capture_output=True)
+        return result.stdout
+
+    except subprocess.CalledProcessError as e:
+        print(f"Command failed with exit code {e.returncode}")
+        print(f"Error output:\n{e.stderr}")
+        raise RetratosError("Exiting the program")        
+
 #print(tagger("hey there Julie", "/home/chirag/apertium-eng-spa", "eng-spa-tagger"))
 # print(filter_tags("*hey<tag>"))
 
@@ -75,3 +120,5 @@ def tagger(sentence, apertium_dir, tag_mode, tag_config_file="config.json"):
 #     print("\nTesting:", word)
 #     result = filter_tags(word)
 #     print("Result:", result)
+
+print(direct("example_data/eng-small.txt", "config.eng.json", "eng", "spa", "/home/chirag/apertium-eng-spa"))

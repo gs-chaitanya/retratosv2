@@ -4,3 +4,7 @@ bidix.txt
 *.patches
 *.priors
 test.py
+*tmp
+
+analyze*
+gg*
