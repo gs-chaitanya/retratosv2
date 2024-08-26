@@ -65,7 +65,7 @@ Given a set of large parallel corpora, eflomal can be used to generate priors. T
 
 example usage <br>
 ````
-python retratos.py --mode generate_priors --workdir "./" --left "./data/eng-small.txt" --right "./data/spa-small.txt" --lang_dir "/home/user/apertium-eng-spa" --output "latest.priors" --left_lang eng --right_lang spa
+python retratos.py --mode generate_priors --workdir "./" --left "./example_data/eng-small.txt" --right "./example_data/spa-small.txt" --lang_dir "/home/user/apertium-eng-spa" --output "latest.priors" --left_lang "eng" --right_lang "spa" --left_config "config.eng.json" --right_config "config.spa.json"
 ````
 
 ## Filtering the Priors

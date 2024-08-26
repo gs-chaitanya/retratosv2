@@ -6,6 +6,7 @@ import string
 from subprocess import Popen, PIPE
 import json
 import os
+import time
 
 class RetratosError(Exception):
     pass
@@ -17,14 +18,6 @@ def does_binary_exist(name):
 
 def remove_punctuation(sentence):
     return sentence.translate(str.maketrans('', '', string.punctuation))
-
-# def tag_filter(word):
-#     match = re.search(r'<([^>]+)>', word)
-#     if match:
-#         base_word = word.split('<')[0]
-#         first_tag = match.group(1)
-#         return f"{base_word}<{first_tag}>"
-#     return word
 
 def filter_tags(word, config_file = "config.json"):
     with open('config.json', 'r') as f:
@@ -63,12 +56,8 @@ def tagger(sentence, apertium_dir, tag_mode, tag_config_file="config.json"):
     tagged_tokens = [filter_tags(x) for x in tagged_tokens if x != '.<sent>']
     return str((' ').join(tagged_tokens))
 
-def tag_nullflush(paragraph, config):
-    escaped_paragraph = remove_punctuation(paragraph.replace("'", r"\'").replace('"',r'\"').replace('!','\!'))
-    escaped_paragraph = escaped_paragraph.replace("\n", "\n\0")
 
-
-def direct(path_to_corpus, path_to_config, source_lang, target_lang, apertium_dir):
+def direct(path_to_corpus, path_to_config, source_lang, target_lang, apertium_dir, workdir):
     """
     corpus is piped directly to the tagger in the shell 
 
@@ -88,37 +77,21 @@ def direct(path_to_corpus, path_to_config, source_lang, target_lang, apertium_di
         f.close()
 
     if cfg["tagger"] == "":
-        tagger = f"apertium -d {apertium_dir} {source_lang}-{target_lang}-tagger"
+        tagger = f"apertium -z -f none -d {apertium_dir} {source_lang}-{target_lang}-tagger"
     else:
         tagger = cfg["tagger"]
 
-    command = f"cat {path_to_corpus} | {tagger}"
+    command = f"sed 's/$/\\x00/' {path_to_corpus} | {tagger}"
 
-    print(command)
     try:
-        result = subprocess.run(command, shell=True, check=True, text=True, capture_output=True)
-        return result.stdout
+        start_time = time.time()
+        subprocess.run(command + " | tr -d '\\000' | tr -d \"'\" | tr -d '\"' | sed 's/[\^\$\;\!\,]//g' " + f"> {os.path.abspath(workdir)}/temp_files/{source_lang}.tagged", shell=True, check=True, text=True)
+        end_time = time.time()
+        print(f"tagged {source_lang} successfully in {end_time - start_time} seconds")
 
     except subprocess.CalledProcessError as e:
         print(f"Command failed with exit code {e.returncode}")
         print(f"Error output:\n{e.stderr}")
-        raise RetratosError("Exiting the program")        
+        raise RetratosError("Exiting the program - there was an error while attempting to tag")        
 
-#print(tagger("hey there Julie", "/home/chirag/apertium-eng-spa", "eng-spa-tagger"))
-# print(filter_tags("*hey<tag>"))
-
-# Test the function
-# test_words = [
-#     "word",
-#     "word<tag1>",
-#     "word<tag1><tag2>",
-#     "*word<tag1><tag2>",
-#     "unknown<tag>"
-# ]
-
-# for word in test_words:
-#     print("\nTesting:", word)
-#     result = filter_tags(word)
-#     print("Result:", result)
-
-print(direct("example_data/eng-small.txt", "config.eng.json", "eng", "spa", "/home/chirag/apertium-eng-spa"))
+# direct("example_data/spa-small.txt", "config.eng.json", "spa", "eng", "/home/chirag/apertium-eng-spa", "./")

@@ -1,7 +1,7 @@
 import argparse
 import os
-from align import align_file
 from generate_priors import genpriors
+from generate_priorsv2 import genpriorsv2
 from filter import filter_priors
 from bidix_patch_gen import gen_bidix_patch
 from utils import does_binary_exist
@@ -21,11 +21,10 @@ parser.add_argument('--mode', help='set working mode - choose out of generate_pr
 
 parser.add_argument('--workdir',required=True, help='specify the working directory. all your working files are saved here and default files are automatically picked up from the workdir')
 
-parser.add_argument('--tag-config', help='specify a config file that \
-                    details which tags are to be included in the priors. It is a json file that needs to be kept in the workdir') #required=True - needed
-
-    # align mode - align a small corpus using priors
-parser.add_argument('--file', help='specify a custom input file in any mode in case you do not want to go with the default file in the workdir')
+parser.add_argument('--left_config', help='specify a config file that \
+                    details which tags are to be included in the priors. It is a json file that needs to be kept in the workdir')
+parser.add_argument('--right_config', help='specify a config file that \
+                    details which tags are to be included in the priors. It is a json file that needs to be kept in the workdir') 
 
     # filter mode - filters the priors file using given constraints for dictionary induction
 parser.add_argument('--min_freq', help='min frequency below which the priors are excluded from the filtered priors')
@@ -41,7 +40,7 @@ parser.add_argument("--left_lang", help='specify the source(left) language')
 parser.add_argument("--right_lang", help='specify the target(right) language')
 parser.add_argument("--output", help='specify an output filename instead of the default in any of the modes')
 
-args = parser.parse_args()
+args = vars(parser.parse_args())
  
 class RetratosError(Exception):
     pass
@@ -58,34 +57,46 @@ with open("requirements.txt", "r") as reqs:
     reqs.close()
 pkg_resources.require(dependencies)
 
-
-workdir = args['workdir']
+workdir = os.path.abspath(args['workdir'])
 
 if not os.path.exists(workdir):
     print("specified workdir path does not exist, create the workdir, place the corpus in it and rerun the tool with the correct arguments for corpus paths")
-    raise RetratosError
+    raise RetratosError("Workdir error")
 
 os.chdir(workdir)
 
 if(args['mode'] == 'generate_priors'):
-    required_args = ['left', 'right', 'lang_dir']
+    required_args = ['left', 'right', 'lang_dir', 'left_lang', 'right_lang']
     missing = [arg for arg in required_args if args[arg] is None]
     if missing:
         parser.error(f"The following arguments are required when mode is 'generate_priors': {', '.join(missing)}")
 
     left_lang = args['left_lang']
     right_lang = args['right_lang']
-    if (args['left_lang'] == None or args['right_lang'] == None):
-        
-        if args['lang_dir'][-1] == '/':
-            args['lang_dir'] = args['lang_dir'][:-1]
 
-        left_lang = args['lang_dir'].split('/')[-1].split('-')
-        righ_lang = args['lang_dir'].split('/')[-1].split('-')
+    left_corpus_path = os.path.abspath(args['left'])
+    right_corpus_path = os.path.abspath(args['right'])
+
+    left_config = os.path.abspath(args['left_config'])
+    right_config = os.path.abspath(args['right_config'])
+
+    lang_dir = os.path.abspath(args['lang_dir'])
+    # if (args['left_lang'] == None or args['right_lang'] == None):
+        
+    #     if args['lang_dir'][-1] == '/':
+    #         args['lang_dir'] = args['lang_dir'][:-1]
+
+    #     left_lang = args['lang_dir'].split('/')[-1].split('-')
+    #     righ_lang = args['lang_dir'].split('/')[-1].split('-')
+    # if args['output'] == None:
+    #     genpriors(workdir, args['left'], args['right'], args['lang_dir'], left_lang, right_lang)
+    # else:
+    #     genpriors(workdir, args['left'], args['right'], args['lang_dir'], left_lang, right_lang, args['output'])
+
     if args['output'] == None:
-        genpriors(workdir, args['left'], args['right'], args['lang_dir'], left_lang, right_lang)
+        genpriorsv2(workdir, left_corpus_path, right_corpus_path, lang_dir, left_lang, right_lang, left_config, right_config)
     else:
-        genpriors(workdir, args['left'], args['right'], args['lang_dir'], left_lang, right_lang, args['output'])
+        genpriorsv2(workdir, left_corpus_path, right_corpus_path, lang_dir, left_lang, right_lang, left_config, right_config, args['output'])
     
     #sample usage in script
     # genpriors('/media/chirag/DATA/GSOC/Apertium/retratos-chaitanya', './data/eng-small.txt', './data/spa-small.txt', '/home/chirag/apertium-eng-spa', 'eng', 'spa')
