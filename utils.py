@@ -59,6 +59,7 @@ def tagger(sentence, apertium_dir, tag_mode, tag_config_file="config.json"):
 
 def direct(path_to_corpus, path_to_config, source_lang, target_lang, apertium_dir, workdir):
     """
+    this generates tagged forms
     corpus is piped directly to the tagger in the shell 
 
     args:
@@ -81,11 +82,11 @@ def direct(path_to_corpus, path_to_config, source_lang, target_lang, apertium_di
     else:
         tagger = cfg["tagger"]
 
-    command = f"sed 's/$/\\x00/' {path_to_corpus} | {tagger}"
+    command = f"sed 's/$/\\x00/' {path_to_corpus} | tr -d \"'\" | tr -d '\"' | sed 's/[\^\$\;\!\,]//g' | {tagger}"
 
     try:
         start_time = time.time()
-        subprocess.run(command + " | tr -d '\\000' | tr -d \"'\" | tr -d '\"' | sed 's/[\^\$\;\!\,]//g' " + f"> {os.path.abspath(workdir)}/temp_files/{source_lang}.tagged", shell=True, check=True, text=True)
+        subprocess.run(command + " | tr -d '\\000' " + f"> {os.path.abspath(workdir)}/temp_files/{source_lang}.tagged", shell=True, check=True, text=True)
         end_time = time.time()
         print(f"tagged {source_lang} successfully in {end_time - start_time} seconds")
 
