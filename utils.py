@@ -56,6 +56,52 @@ def tagger(sentence, apertium_dir, tag_mode, tag_config_file="config.json"):
     tagged_tokens = [filter_tags(x) for x in tagged_tokens if x != '.<sent>']
     return str((' ').join(tagged_tokens))
 
+################## new tagging functions for genpriorsv2 ##########################################################################################################
+
+def filter_tagged_token(token, path_to_config):
+    path_to_config = os.path.abspath(path_to_config)
+
+    with open(path_to_config, 'r', encoding='utf-8') as config_file:
+        config = json.load(config_file)
+
+    allowed_tags = list(config["subpos_tags"].keys())
+    for key, values in config["subpos_tags"].items():
+        allowed_tags.extend(values)
+    
+    pattern = r'(\*?\w+)(<[^>]+>)+'
+    if re.match(pattern, token) == None:
+        return token
+    
+    base_word = token.split('<')[0]
+    tags_in_token = re.findall(r'<([^>]+)>', token)
+    final_tag_list = [ele for ele in tags_in_token if ele in allowed_tags]
+
+    filtered_token = [base_word]
+    for tag in final_tag_list:
+        filtered_token.append(f"<{tag}>")
+
+    return (('').join(filtered_token))
+
+
+def tagfilterv2(path_to_corpus, path_to_config, workdir, lang):
+    path_to_corpus = os.path.abspath(path_to_corpus)
+    path_to_config = os.path.abspath(path_to_config)
+
+    output_filename = f"{lang}.tagged"
+    temp_file_dir = os.path.join(os.path.abspath(workdir), "temp_files")
+    output_path = os.path.join(temp_file_dir, output_filename)
+
+    try:     
+        with open(path_to_corpus, 'r', encoding='utf-8') as infile, open(output_path, "a") as outfile:
+            for line in infile:
+                line.replace("+", "$ ^")
+                tokens = re.findall(r'\^([^\$]+)\$', line)
+                filtered_tokens = [filter_tagged_token(ele, path_to_config) for ele in tokens]
+                outfile.write(" ".join(filtered_tokens) + "\n")
+    except Exception as e:
+        print(f"Error: {e}")
+        print("there was an issue with filtering tags")
+
 
 def direct(path_to_corpus, path_to_config, source_lang, target_lang, apertium_dir, workdir):
     """
@@ -82,17 +128,32 @@ def direct(path_to_corpus, path_to_config, source_lang, target_lang, apertium_di
     else:
         tagger = cfg["tagger"]
 
-    command = f"sed 's/$/\\x00/' {path_to_corpus} | tr -d \"'\" | tr -d '\"' | sed 's/[\^\$\;\!\,]//g' | {tagger}"
+    command = f"sed 's/$/\\x00/' {path_to_corpus} | tr -d \"'\" | tr -d '\"' | sed 's/[\^\$\¿\¡\;\!\,]//g' | {tagger}"
 
+    # first we tag the file - store it in lang.raw.tagged
     try:
         start_time = time.time()
-        subprocess.run(command + " | tr -d '\\000' " + f"> {os.path.abspath(workdir)}/temp_files/{source_lang}.tagged", shell=True, check=True, text=True)
+        subprocess.run(command + " | tr -d '\\000' " + f"> {os.path.abspath(workdir)}/temp_files/{source_lang}.raw.tagged", shell=True, check=True, text=True)
         end_time = time.time()
         print(f"tagged {source_lang} successfully in {end_time - start_time} seconds")
 
     except subprocess.CalledProcessError as e:
         print(f"Command failed with exit code {e.returncode}")
         print(f"Error output:\n{e.stderr}")
-        raise RetratosError("Exiting the program - there was an error while attempting to tag")        
+        raise RetratosError("Exiting the program - there was an error while attempting to tag")
+    
+    # now we filter the tagged files and store them in lang.tagged
+    try:
+        raw_tagged_filepath = f"{os.path.abspath(workdir)}/temp_files/{source_lang}.raw.tagged"
+        start_time = time.time()
+        tagfilterv2(raw_tagged_filepath, path_to_config, workdir, source_lang)
+        end_time = time.time()
+        print(f"filtered the raw {source_lang} tagged corpus successfully in {end_time - start_time} seconds")
 
-# direct("example_data/spa-small.txt", "config.eng.json", "spa", "eng", "/home/chirag/apertium-eng-spa", "./")
+    except subprocess.CalledProcessError as e:
+        print(f"Command failed with exit code {e.returncode}")
+        print(f"Error output:\n{e.stderr}")
+        raise RetratosError("Exiting the program - there was an error while attempting to filter the tags")
+
+
+direct("example_data/eng-small.txt", "config.eng.json", "eng", "spa", "/home/chirag/apertium-eng-spa", "./")
