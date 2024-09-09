@@ -1,5 +1,5 @@
 # ReTraTos v2 - GSoC 2024
-
+## [Link to Proposal](https://wiki.apertium.org/wiki/User:Daedalus/GSoC2024Proposal)
 
 # Setting up
 A few prereqiusites need to be installed before you can get started.
