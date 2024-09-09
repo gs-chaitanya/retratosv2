@@ -100,12 +100,6 @@ example usage <br>
 python retratos.py --mode suggest --workdir "./" --output bidix_new.patches
 ````
 
-## Aligning
-
--- not recommended for use --
-
-the align mode can be used to align a smaller corpus using previously generated priors. This mode does not make sense when used with the existing priors as we are working with tagged forms while generating priors. You can use this when working with untagged forms
-
 
 ### workspace defaults
 - priors file saved as latest.priors
