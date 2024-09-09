@@ -156,4 +156,4 @@ def direct(path_to_corpus, path_to_config, source_lang, target_lang, apertium_di
         raise RetratosError("Exiting the program - there was an error while attempting to filter the tags")
 
 
-direct("example_data/eng-small.txt", "config.eng.json", "eng", "spa", "/home/chirag/apertium-eng-spa", "./")
+# direct("example_data/eng-small.txt", "config.eng.json", "eng", "spa", "/home/chirag/apertium-eng-spa", "./")
