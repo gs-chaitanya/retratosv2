@@ -64,23 +64,30 @@ def filter_tagged_token(token, path_to_config):
     with open(path_to_config, 'r', encoding='utf-8') as config_file:
         config = json.load(config_file)
 
-    allowed_tags = list(config["subpos_tags"].keys())
-    for key, values in config["subpos_tags"].items():
-        allowed_tags.extend(values)
-    
+    subpos_tags_list = list(config["subpos_tags"].keys())
+
     pattern = r'(\*?\w+)(<[^>]+>)+'
     if re.match(pattern, token) == None:
         return token
     
+    # we have separated the base word and a list of the tags in the sentence
     base_word = token.split('<')[0]
     tags_in_token = re.findall(r'<([^>]+)>', token)
-    final_tag_list = [ele for ele in tags_in_token if ele in allowed_tags]
 
-    filtered_token = [base_word]
-    for tag in final_tag_list:
-        filtered_token.append(f"<{tag}>")
+    # if the first tag does not match any entry in the subpos tag - keep only the first tag
+    # else, we match the rest of the tags to the tags corresponding to the first tag as specified in the config
+    if tags_in_token[0] in subpos_tags_list:
+        main_tag = tags_in_token[0]
+        sub_tags = config["subpos_tags"][main_tag]
+        final_token = [base_word, f"<{main_tag}>"]
+        for tag in tags_in_token:
+            if tag in sub_tags:
+                final_token.append(f"<{tag}>")
 
-    return (('').join(filtered_token))
+        return ('').join(final_token)
+        
+    else:
+        return f"{base_word}<{tags_in_token[0]}>"
 
 
 def tagfilterv2(path_to_corpus, path_to_config, workdir, lang):
@@ -156,4 +163,4 @@ def direct(path_to_corpus, path_to_config, source_lang, target_lang, apertium_di
         raise RetratosError("Exiting the program - there was an error while attempting to filter the tags")
 
 
-# direct("example_data/eng-small.txt", "config.eng.json", "eng", "spa", "/home/chirag/apertium-eng-spa", "./")
+direct("example_data/eng-small.txt", "./example_data/config.eng.json", "eng", "spa", "/home/chirag/apertium-eng-spa", "./")
