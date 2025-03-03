@@ -1,24 +1,13 @@
 import os
 import re
+from collections import defaultdict
 
-#the bidix patch gen build patches from filtered priors
-#the frequency from filtered priors is removed and that file is fed to this script
-
-
-# consider an entry in the filtered priors without the frequency
-# it should look something like this 
-# and<cnjcoo> y<cnjcoo> 
-# we need to extract each tag and place it within a <s n=""> tag
-# we shall employ regex matching for extracting the text withing tags like before
-# regex matching comes with its own set of problems, but we shall continue with regex until something better comes up - retratosv3 :) 
-
-# defining a custom function to extract tags from text - returns a list of tags
 def extr_tags(word):
-    # matching a regex expression to extract all the tags from a tagged form and storing it in a list called tags
-    tags = re.findall(r'<([^>]+)>', word)
-    return tags
+    """Extracts tags from a tagged word using regex."""
+    return re.findall(r'<([^>]+)>', word)
 
 def pad_word(word):
+    """Wraps words with <s n=""> tags."""
     base_word = word.split('<')[0]
     tags_here = extr_tags(word)
     final_pad = [base_word]
@@ -26,29 +15,42 @@ def pad_word(word):
         final_pad.append(f"<s n=\"{tag}\">")
     return ''.join(final_pad)
 
-
-# creating a function to make it importable
+def get_pos_tag(tags):
+    """Extracts POS tag from the tag list (assuming first tag is POS)."""
+    return tags[0] if tags else "unknown"  # Ensure a default POS tag
 
 def gen_bidix_patch(file, workdir, output_filename="bidix.patches"):
-    os.chdir(workdir)
-    patches = []
-    with open(f'./{file}', 'r') as f:
+    patches_by_pos = defaultdict(list)
+
+    input_path = os.path.join(workdir, file)
+    output_path = os.path.join(workdir, output_filename)
+
+    with open(input_path, 'r', encoding="utf-8") as f:
         for line in f:
-            print()
-            l = "<l>" + pad_word(line.split(' ')[0]) + "</l>"
-            r = "<r>" + pad_word(line.split(' ')[1]) + "</r>"
-            entry = "<e>" + "\t" + "<p>" + l + r + "</p>" + "</e>" + "\n"
-            patches.append(entry)
-        f.close()
+            words = line.strip().split()  # Splitting on any whitespace
+            if len(words) < 2:
+                continue  # Skip malformed lines
+            
+            l_word, r_word = words[0], words[1]
+            l_tags, r_tags = extr_tags(l_word), extr_tags(r_word)
+            pos_tag = get_pos_tag(l_tags)  # Use left word POS
 
-    with open(f"./{output_filename}", 'w') as g:
-        for entry in patches:
-            g.write(entry)
-        g.close()
+            l_entry = "<l>" + pad_word(l_word) + "</l>"
+            r_entry = "<r>" + pad_word(r_word) + "</r>"
+            entry = "<e>\t<p>" + l_entry + r_entry + "</p></e>\n"
 
-    print("finished generating bidix patches")
+            patches_by_pos[pos_tag].append(entry)
 
-# test
+    # Sort POS keys
+    sorted_pos_keys = sorted(patches_by_pos.keys())
+
+    # Write to output file
+    with open(output_path, 'w', encoding="utf-8") as g:
+        for pos in sorted_pos_keys:
+            for entry in patches_by_pos[pos]:
+                g.write(entry)
+
+    print(f"Finished generating bidix patches in {output_path}, sorted by POS.")
+
+# Test:
 # gen_bidix_patch("filtered_p.priors", "./")
-        
-
